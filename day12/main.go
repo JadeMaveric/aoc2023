@@ -166,7 +166,7 @@ func numOfValidPos(row Row, idx, total int) (count int) {
 		}
 
 		if p == -1 {
-		  ecc := generateEcc(curr, false)
+			ecc := generateEcc(curr, false)
 			if isMatch(row.ecc, ecc) {
 				// validPos = append(validPos, curr)
 				count++
@@ -229,10 +229,90 @@ func unfoldInput(in Input, factor int) (unfoldedIn Input) {
 	return unfoldedIn
 }
 
+func isValidSpan(row []Spring, size int) bool {
+	if len(row) < (size + 1) {
+		return false
+	}
+
+	for i := 0; i < size; i++ {
+		if row[i] == SpringActive {
+			return false
+		}
+	}
+
+	if row[size] == SpringDamaged {
+		return false
+	} else {
+		return true
+	}
+}
+
+func countValidPos(row []Spring, ecc []int, cache map[string]int) (count, cacheHit, processed int) {
+	hash := string(row) + fmt.Sprint(ecc)
+	if c, ok := cache[hash]; ok {
+		count += c
+    cacheHit++
+		return
+	} else {
+		processed++
+	}
+
+	if len(row) == 0 {
+		if len(ecc) == 0 {
+			count = 1
+			return
+		} else {
+			count = 0
+			return
+		}
+	}
+
+	if row[0] == SpringActive || row[0] == SpringUnknown {
+		nCount, nCacheHit, nProcessed := countValidPos(row[1:], ecc, cache)
+		count += nCount
+		cacheHit += nCacheHit
+		processed += nProcessed
+	}
+
+	if len(ecc) > 0 && (row[0] == SpringDamaged || row[0] == SpringUnknown) {
+		spanSize := ecc[0]
+		if isValidSpan(row, spanSize) {
+			nCount, nCacheHit, nProcessed := countValidPos(row[spanSize+1:], ecc[1:], cache)
+			count += nCount
+			cacheHit += nCacheHit
+			processed += nProcessed
+		}
+	}
+
+	// fmt.Println(hash+":", count)
+
+	cache[hash] = count
+	return
+}
+
 func solveB(in Input) (solnB int) {
 	defer timer("solveB")()
 	unfoldedIn := unfoldInput(in, 5)
-	solnB = solveA(unfoldedIn)
+
+	cache := make(map[string]int)
+	cacheHit, processed := 0, 0
+
+	for _, row := range unfoldedIn {
+		// Add a `.` to make boundary checking easier
+		row.springs = append(row.springs, SpringActive)
+
+		count, nCacheHit, nProcessed := countValidPos(row.springs, row.ecc, cache)
+		cacheHit += nCacheHit
+		processed += nProcessed
+
+		hash := string(row.springs) + fmt.Sprint(row.ecc)
+		fmt.Println(hash+":", count)
+
+		solnB += count
+	}
+
+	fmt.Println("Processed:", processed, " -- Cache Hit:", cacheHit)
+
 	return solnB
 }
 
@@ -261,10 +341,10 @@ func main() {
 	//   fmt.Println()
 	// }
 
-	solnA := solveA(in)
-	fmt.Println("A:", solnA)
+	// solnA := solveA(in)
+	// fmt.Println("A:", solnA)
 
-  // This takes too long!!
-	// solnB := solveB(in)
-	// fmt.Println("B:", solnB)
+	// This takes too long!!
+	solnB := solveB(in)
+	fmt.Println("B:", solnB)
 }
