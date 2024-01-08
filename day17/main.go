@@ -29,8 +29,8 @@ func parseInput(filename string) (grid Grid) {
 }
 
 func main() {
-	grid := parseInput("day17/in.txt")
-	// fmt.Println(grid.String() + "\n")
+	grid := parseInput("day17/a.txt")
+	fmt.Println(grid.String() + "\n")
 
 	start := grid[0][0]
 	for i := range start.lossGrid {
@@ -40,7 +40,7 @@ func main() {
 	end := grid[len(grid)-1][len(grid[0])-1]
 
 	// path := AStarPathFinderSimple{}.FindPath(&grid, start, end)
-	path := AStarPathFinderSimple{}.FindPath(&grid, start, end)
+	path := AStarPathFinderUltra{}.FindPath(&grid, start, end)
 
-	fmt.Println(len(grid.VisitedString(path)))
+	fmt.Println(grid.VisitedString(path))
 }

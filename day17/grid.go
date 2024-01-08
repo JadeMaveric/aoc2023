@@ -2,10 +2,12 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"math"
 )
 
-const RANGE = 3
+const MIN_STEP = 4
+const RANGE = 6
 const SIZE = 2*RANGE + 1
 
 type Block struct {
@@ -188,4 +190,68 @@ func (gPtr *Grid) Neighbors(curr *Block) []*Block {
 		neighbors = append(neighbors, g[curr.posY][curr.posX+1])
 	}
 	return neighbors
+}
+
+func (gPtr *Grid) UltraNeighbors(curr *Block, changeDir bool) []*Block {
+	if !changeDir {
+		return gPtr.Neighbors(curr)
+	}
+
+	g := *gPtr
+	neighbors := make([]*Block, 0)
+	// up
+	if (curr.posY - MIN_STEP) >= 0 {
+		neighbors = append(neighbors, g[curr.posY-MIN_STEP][curr.posX])
+	}
+	// down
+	if (curr.posY + MIN_STEP) <= len(g)-1 {
+		neighbors = append(neighbors, g[curr.posY+MIN_STEP][curr.posX])
+	}
+	// left
+	if (curr.posX - MIN_STEP) >= 0 {
+		neighbors = append(neighbors, g[curr.posY][curr.posX-MIN_STEP])
+	}
+	// right
+	if (curr.posX + MIN_STEP) <= len(g[0])-1 {
+		neighbors = append(neighbors, g[curr.posY][curr.posX+MIN_STEP])
+	}
+	return neighbors
+}
+
+func (gPtr *Grid) GetTotalLoss(curr, next *Block) int {
+  grid := *gPtr
+  x1, y1 := curr.posX, curr.posY
+  x2, y2 := next.posX, next.posY
+
+  if x1 != x2 && y1 != y2 {
+    panic(fmt.Errorf("Invalid Path"))
+  }
+
+  totalLoss := 0
+
+  if x1 == x2 {
+    a := min(y1, y2)
+    b := max(y1, y2)
+    for i := a; i <= b; i++ {
+      if a == y1 {
+        continue
+      } else {
+        totalLoss += grid[a][x1].heatLoss
+      }
+    }
+  }
+
+  if y1 == x2 {
+    a := min(x1, y2)
+    b := max(x1, y2)
+    for i := a; i <= b; i++ {
+      if a == x1 {
+        continue
+      } else {
+        totalLoss += grid[y1][a].heatLoss
+      }
+    }
+  }
+
+  return totalLoss
 }
